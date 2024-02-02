@@ -1,4 +1,5 @@
 import pandas as pd
+import altair as alt
 import plotly.express as px
 import streamlit as st
 
@@ -7,7 +8,7 @@ def ler_planilha():
     excluir_status = ['TREINAMENTO', 'CADASTRO', 'TREINAMENTO']
     excluir_usuario = ['LUIZ.CARLOS']
     excluir_rota = [55, 70]
-    df_bd = pd.read_excel(r"E:\OEM\content\base_sip_Concluido.xlsx")
+    df_bd = pd.read_excel(r"content\base_sip_Concluido.xlsx")
     df = df_bd[~df_bd['STATUS'].isin(excluir_status)]
     df = df[~df['EXECUTOR'].isin(excluir_usuario)]
     df = df[~df['ROTA'].isin(excluir_rota)]
