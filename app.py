@@ -7,7 +7,7 @@ def ler_planilha():
     excluir_status = ['TREINAMENTO', 'CADASTRO', 'TREINAMENTO']
     excluir_usuario = ['LUIZ.CARLOS']
     excluir_rota = [55, 70]
-    df_bd = pd.read_excel(r'C:\Users\helym\projeto_python\dash\dash_oem\content\base_sip_Concluido.xlsx')
+    df_bd = pd.read_excel(r"E:\OEM\content\base_sip_Concluido.xlsx")
     df = df_bd[~df_bd['STATUS'].isin(excluir_status)]
     df = df[~df['EXECUTOR'].isin(excluir_usuario)]
     df = df[~df['ROTA'].isin(excluir_rota)]
@@ -37,7 +37,7 @@ def gerar_grafico(df_filtered):
 
 def mostrar_dataframe(df_filtered):
     """Mostra o DataFrame em formato de tabela."""
-    st.table(df_filtered[['NUMOS','NUMOCORRENCIA','UC','IDSIGFI','TIPOCAUSA','NOMECLIENTE','ROTA','STATUS','EXECUTOR','DTCONCLUSAO','LATLONCON']])
+    st.dataframe(df_filtered[['NUMOS','NUMOCORRENCIA','UC','IDSIGFI','TIPOCAUSA','NOMECLIENTE','ROTA','STATUS','EXECUTOR','DTCONCLUSAO','LATLONCON']])
 
 if __name__ == "__main__":
     df = ler_planilha()
