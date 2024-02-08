@@ -1,74 +1,293 @@
 import pandas as pd
-import streamlit as st
+from numpy.core.fromnumeric import size
+import streamlit as st  
 import plotly.express as px
 
-@st.cache_data(ttl=600)  # Use st.cache_data com ttl (time-to-live) em segundos
-def ler_planilha():
-    excluir_status = ['TREINAMENTO', 'CADASTRO', 'TREINAMENTO']
-    excluir_usuario = ['LUIZ.CARLOS']
-    excluir_rota = [55, 70]
-    df_bd = pd.read_excel(r'C:\Users\helym\projeto_python\dash\dash_oem\content\base_sip_Concluido.xlsx')
-    df = df_bd[~df_bd['STATUS'].isin(excluir_status)]
-    df = df[~df['EXECUTOR'].isin(excluir_usuario)]
-    df = df[~df['ROTA'].isin(excluir_rota)]
-    return df
 
-@st.cache_data(ttl=600)  # Use st.cache_data com ttl (time-to-live) em segundos
-def aplicar_filtros(df, rota_value, status_value, tipo_value, executor_value, data_inicial, data_final, etapa_value):
-    df_filtered = df[
-        df["ROTA"].isin(rota_value) &
-        df["STATUS"].isin(status_value) &
-        df["TIPO"].isin(tipo_value) &
-        df["EXECUTOR"].isin(executor_value) &
-        df["ORIGEM"].isin(etapa_value) &
-        (df["DTCONCLUSAO"] >= data_inicial) &
-        (df["DTCONCLUSAO"] <= data_final)
-    ]
-    return df_filtered
+st.sidebar.title('MENU')
+Page_operation = st.sidebar.selectbox('Operações', ['O&M-1ªtranche-Lote1(Cruzeiro do SUl - AC)',
+                                                    'Comissonamento-2ªtranche-Lote1&2(Cruzeiro do sUl/Sena Madureira - AC)',
+                                                    'Comissonamento-2ªtranche-Lote3(Sorriso - MT)'])
 
-def gerar_grafico(df_filtered):
-    grafico = pd.pivot_table(df_filtered, values='NUMOS', index=['ROTA'], columns=['STATUS'], aggfunc='count')
-    fig = px.bar(grafico, barmode='stack')
-    fig.update_layout(xaxis=dict(tickmode='array', tickvals=list(grafico.index), ticktext=list(grafico.index)))
-    fig.update_layout(xaxis_title='ROTA', yaxis_title='CONTAGEM', hovermode='closest')
-    fig.update_layout(height=800, width=1280)
-    st.plotly_chart(fig)
 
-def mostrar_dataframe(df_filtered):
-    st.dataframe(df_filtered[['NUMOS', 'NUMOCORRENCIA', 'UC', 'IDSIGFI', 'TIPOCAUSA', 'NOMECLIENTE', 'ROTA', 'STATUS', 'EXECUTOR', 'DTCONCLUSAO', 'LATLONCON']])
+#Gráfico e tabela  O&M 2ª Tranche lote 01:
+if Page_operation == 'O&M-1ªtranche-Lote1(Cruzeiro do SUl - AC)':
+    st.title("PRODUÇÃO O&M")    
 
-if __name__ == "__main__":
-    df = ler_planilha()
-    df["DTCONCLUSAO"] = pd.to_datetime(df["DTCONCLUSAO"]).dt.date
+    @st.cache_data
+    def ler_planilha():
+        """Lê uma planilha do Excel."""
+        excluir_status = ['TREINAMENTO', 'CADASTRO', 'TREINAMENTO']
+        excluir_usuario = ['LUIZ.CARLOS']
+        excluir_rota = [55, 70]
+        df_bd = pd.read_excel(r'C:\Users\helym\projeto_python\dash\dash_oem\content\base_sip_Concluido.xlsx')
+        df = df_bd[~df_bd['STATUS'].isin(excluir_status)]
+        df = df[~df['EXECUTOR'].isin(excluir_usuario)]
+        df = df[~df['ROTA'].isin(excluir_rota)]
+        return df
 
-    rota_options = sorted(list(df['ROTA'].unique()))
-    rota_filter = st.multiselect("Rotas:", rota_options)
+    @st.cache_data
+    def aplicar_filtros(df, rota_value, status_value, tipo_value, executor_value, data_inicial, data_final, etapa_value):
+        """Aplica filtros a uma planilha."""
+        df_filtered = df[
+            df["ROTA"].isin(rota_value) &
+            df["STATUS"].isin(status_value) &
+            df["TIPO"].isin(tipo_value) &
+            df["EXECUTOR"].isin(executor_value) &
+            df["ORIGEM"].isin(etapa_value) &
+            (df["DTCONCLUSAO"] >= data_inicial) &
+            (df["DTCONCLUSAO"] <= data_final)
+        ]
+        return df_filtered
 
-    status_options = sorted(list(df['STATUS'].unique()))
-    status_filter = st.multiselect("Status:", status_options)
+    def gerar_grafico(df_filtered):
+        """Gera um gráfico com base nos dados filtrados."""
+        grafico = pd.pivot_table(df_filtered, values='NUMOS', index=['ROTA'], columns=['STATUS'], aggfunc='count')
+        fig = px.bar(grafico, barmode='stack')
+        fig.update_layout(xaxis=dict(tickmode='array', tickvals=list(grafico.index), ticktext=list(grafico.index)))
+        fig.update_layout(xaxis_title='ROTA', yaxis_title='CONTAGEM', hovermode='closest')
+        fig.update_layout(height=800, width=1280)
+        st.plotly_chart(fig)
 
-    tipo_options = sorted(list(df['TIPO'].unique()))
-    tipo_filter = st.multiselect("Tipo:", tipo_options)
+    def mostrar_dataframe(df_filtered):
+        """Mostra o DataFrame em formato de tabela."""
+        # Adiciona uma coluna de checkboxes ao DataFrame
+        df_filtered['Selecionar'] = [False] * len(df_filtered)
 
-    executor_options = sorted(list(df['EXECUTOR'].unique()))
-    executor_filter = st.multiselect("Usuário:", executor_options)
+        # Exibe o DataFrame com a coluna de checkboxes
+        st.dataframe(df_filtered[['Selecionar', 'NUMOS', 'NUMOCORRENCIA', 'UC', 'IDSIGFI', 'TIPOCAUSA', 
+                                'NOMECLIENTE', 'ROTA', 'STATUS', 'EXECUTOR', 'DTCONCLUSAO', 'LATLONCON']])
+        
+        # Acessa o valor máximo da coluna "NUMOS"
+        favorite_command = df_filtered["NUMOS"].max()
+        st.markdown(f"Your favorite command is **{favorite_command}** 🎈")
+        
+    if __name__ == "__main__":
+        df = ler_planilha()
+        df["DTCONCLUSAO"] = pd.to_datetime(df["DTCONCLUSAO"]).dt.date
+        etapa_options = sorted(list(df['ORIGEM'].unique()))
+        etapa_filter = st.multiselect("Etapa:", etapa_options)
 
-    etapa_options = sorted(list(df['ORIGEM'].unique()))
-    etapa_filter = st.multiselect("Etapa:", etapa_options)
+        rota_options = sorted(list(df['ROTA'].unique()))
+        rota_filter = st.multiselect("Rotas:", rota_options)
 
-    data_inicial_filter = st.date_input("Data Inicial:", value=df["DTCONCLUSAO"].min())
-    data_final_filter = st.date_input("Data Final:", value=df["DTCONCLUSAO"].max())
+        status_options = sorted(list(df['STATUS'].unique()))
+        status_filter = st.multiselect("Status:", status_options)
 
-    df_filtered = aplicar_filtros(df, rota_filter, status_filter, tipo_filter, executor_filter, data_inicial_filter, data_final_filter, etapa_filter)
+        tipo_options = sorted(list(df['TIPO'].unique()))
+        tipo_filter = st.multiselect("Tipo:", tipo_options)
 
-    if st.button("Apresentar Tabela"):
-        if df_filtered is None or df_filtered.empty:
-            st.warning("Nenhum resultado encontrado. Refine os filtros e tente novamente.")
-        else:
-            mostrar_dataframe(df_filtered)
+        executor_options = sorted(list(df['EXECUTOR'].unique()))
+        executor_filter = st.multiselect("Usuário:", executor_options)
 
-    if st.button("Gerar Gráfico"):
-        if df_filtered is None or df_filtered.empty:
-            st.warning("Nenhum resultado encontrado. Refine os filtros e tente novamente.")
-        else:
-            gerar_grafico(df_filtered)
+
+
+        data_inicial_filter = st.date_input("Data Inicial:", value=df["DTCONCLUSAO"].min())
+        data_final_filter = st.date_input("Data Final:", value=df["DTCONCLUSAO"].max())
+
+        df_filtered = aplicar_filtros(df, rota_filter, status_filter, tipo_filter, executor_filter, data_inicial_filter, data_final_filter, etapa_filter)
+
+        # Crie duas colunas lado a lado
+        col1, col2 = st.columns(2)
+        # Botão "Apresentar Tabela"
+        if col1.button("Apresentar Tabela"):
+            if df_filtered.empty:
+                st.warning("Nenhum resultado encontrado. Refine os filtros e tente novamente.")
+            else:
+                mostrar_dataframe(df_filtered)
+        # Botão "Gerar Gráfico"
+        if col2.button("Gerar Gráfico"):
+            if df_filtered.empty:
+                st.warning("Nenhum resultado encontrado. Refine os filtros e tente novamente.")
+            else:
+                gerar_grafico(df_filtered)
+
+#Gráfico e tabela  Comissionamento 2ª Tranche lote 01 & Lote 02:
+
+if Page_operation == 'Comissonamento-2ªtranche-Lote1&2(Cruzeiro do sUl/Sena Madureira - AC)':
+    st.title("COMISSIONAMENTOS LOTE 01 & 02")    
+
+    @st.cache_data
+    def ler_planilha():
+        """Lê uma planilha do Excel."""
+        excluir_status = ['TREINAMENTO', 'CADASTRO', 'TREINAMENTO']
+        excluir_usuario = ['LUIZ.CARLOS']
+        excluir_rota = [55, 70]
+        df_bd = pd.read_excel(r'C:\Users\helym\projeto_python\dash\dash_oem\content\base_sip_instalacoes_Geral_ac.xlsx')
+        df = df_bd[~df_bd['STATUS'].isin(excluir_status)]
+        df = df[~df['USUARIO'].isin(excluir_usuario)]
+        df = df[~df['ROTA'].isin(excluir_rota)]
+        return df
+
+    @st.cache_data
+    def aplicar_filtros(df, rota_value, status_value, tipo_value, usuario_value, data_inicial, data_final, etapa_value):
+        """Aplica filtros a uma planilha."""
+        df_filtered = df[
+            df["ROTA"].isin(rota_value) &
+            df["STATUS"].isin(status_value) &
+            df["TIPO"].isin(tipo_value) &
+            df["USUARIO"].isin(usuario_value) &
+            df["ETAPA"].isin(etapa_value) &
+            (df["CONCLUSAO"] >= data_inicial) &
+            (df["CONCLUSAO"] <= data_final)
+        ]
+        return df_filtered
+
+    def gerar_grafico(df_filtered):
+        """Gera um gráfico com base nos dados filtrados."""
+        grafico = pd.pivot_table(df_filtered, values='IDSERVICOSCONJ', index=['ROTA'], columns=['STATUS'], aggfunc='count')
+        fig = px.bar(grafico, barmode='stack')
+        fig.update_layout(xaxis=dict(tickmode='array', tickvals=list(grafico.index), ticktext=list(grafico.index)))
+        fig.update_layout(xaxis_title='ROTA', yaxis_title='CONTAGEM', hovermode='closest')
+        fig.update_layout(height=800, width=1280)
+        st.plotly_chart(fig)
+
+    def mostrar_dataframe(df_filtered):
+        """Mostra o DataFrame em formato de tabela."""
+        # Adiciona uma coluna de checkboxes ao DataFrame
+        df_filtered['Selecionar'] = [False] * len(df_filtered)
+
+        # Exibe o DataFrame com a coluna de checkboxes
+        st.dataframe(df_filtered[['Selecionar','IDSERVICOSCONJ','ROTA','CONCLUSAO','STATUS','USUARIO',
+                                  'NOMEDOCLIENTE','OBSERVACAOINT','LATLONCONF','ENDERECO','MUNICIPIO','ETAPA','USUARIOALT']])
+        
+        # Acessa o valor máximo da coluna "IDSERVICOSCONJ"
+        favorite_command = df_filtered["IDSERVICOSCONJ"].max()
+        st.markdown(f"Your favorite command is **{favorite_command}** 🎈")
+        
+    if __name__ == "__main__":
+        df = ler_planilha()
+        df["CONCLUSAO"] = pd.to_datetime(df["CONCLUSAO"]).dt.date
+
+        data_inicial_filter = st.date_input("Data Inicial:", value=df["CONCLUSAO"].min())
+        data_final_filter = st.date_input("Data Final:", value=df["CONCLUSAO"].max())
+
+        tipo_options = sorted(list(df['TIPO'].unique()))
+        tipo_filter = st.multiselect("Tipo:", tipo_options)
+
+        status_options = sorted(list(df['STATUS'].unique()))
+        status_filter = st.multiselect("Status:", status_options)
+
+        rota_options = sorted(list(df['ROTA'].unique()))
+        rota_filter = st.multiselect("Rotas:", rota_options)
+
+        usuario_options = sorted(list(df['USUARIO'].unique()))
+        usuario_filter = st.multiselect("Usuário:", usuario_options)
+
+        etapa_options = sorted(list(df['ETAPA'].unique()))
+        etapa_filter = st.multiselect("Etapa:", etapa_options)
+
+
+
+        df_filtered = aplicar_filtros(df, rota_filter, status_filter, tipo_filter, usuario_filter, data_inicial_filter, data_final_filter, etapa_filter)
+
+        # Crie duas colunas lado a lado
+        col1, col2 = st.columns(2)
+        # Botão "Apresentar Tabela"
+        if col1.button("Apresentar Tabela"):
+            if df_filtered.empty:
+                st.warning("Nenhum resultado encontrado. Refine os filtros e tente novamente.")
+            else:
+                mostrar_dataframe(df_filtered)
+        # Botão "Gerar Gráfico"
+        if col2.button("Gerar Gráfico"):
+            if df_filtered.empty:
+                st.warning("Nenhum resultado encontrado. Refine os filtros e tente novamente.")
+            else:
+                gerar_grafico(df_filtered)
+
+#Gráfico e tabela  Comissionamento 2ª Tranche lote 03:
+
+if Page_operation == 'Comissonamento-2ªtranche-Lote3(Sorriso - MT)':
+    st.title("COMISSIONAMENTOS LOTE 03")    
+
+    @st.cache_data
+    def ler_planilha():
+        """Lê uma planilha do Excel."""
+        excluir_status = ['TREINAMENTO', 'CADASTRO', 'TREINAMENTO']
+        excluir_usuario = ['LUIZ.CARLOS']
+        excluir_rota = [55, 70]
+        df_bd = pd.read_excel(r'C:\Users\helym\projeto_python\dash\dash_oem\content\base_sip_instalacoes_Geral_mt.xlsx')
+        df = df_bd[~df_bd['STATUS'].isin(excluir_status)]
+        df = df[~df['USUARIO'].isin(excluir_usuario)]
+        df = df[~df['ROTA'].isin(excluir_rota)]
+        return df
+
+    @st.cache_data
+    def aplicar_filtros(df, rota_value, status_value, tipo_value, usuario_value, data_inicial, data_final, etapa_value):
+        """Aplica filtros a uma planilha."""
+        df_filtered = df[
+            df["ROTA"].isin(rota_value) &
+            df["STATUS"].isin(status_value) &
+            df["TIPO"].isin(tipo_value) &
+            df["USUARIO"].isin(usuario_value) &
+            df["ETAPA"].isin(etapa_value) &
+            (df["CONCLUSAO"] >= data_inicial) &
+            (df["CONCLUSAO"] <= data_final)
+        ]
+        return df_filtered
+
+    def gerar_grafico(df_filtered):
+        """Gera um gráfico com base nos dados filtrados."""
+        grafico = pd.pivot_table(df_filtered, values='IDSERVICOSCONJ', index=['ROTA'], columns=['STATUS'], aggfunc='count')
+        fig = px.bar(grafico, barmode='stack')
+        fig.update_layout(xaxis=dict(tickmode='array', tickvals=list(grafico.index), ticktext=list(grafico.index)))
+        fig.update_layout(xaxis_title='ROTA', yaxis_title='CONTAGEM', hovermode='closest')
+        fig.update_layout(height=800, width=1280)
+        st.plotly_chart(fig)
+
+    def mostrar_dataframe(df_filtered):
+        """Mostra o DataFrame em formato de tabela."""
+        # Adiciona uma coluna de checkboxes ao DataFrame
+        df_filtered['Selecionar'] = [False] * len(df_filtered)
+
+        # Exibe o DataFrame com a coluna de checkboxes
+        st.dataframe(df_filtered[['Selecionar','IDSERVICOSCONJ','ROTA','CONCLUSAO','STATUS','USUARIO',
+                                  'NOMEDOCLIENTE','OBSERVACAOINT','LATLONCONF','ENDERECO','MUNICIPIO','ETAPA','USUARIOALT']])
+        
+        # Acessa o valor máximo da coluna "IDSERVICOSCONJ"
+        favorite_command = df_filtered["IDSERVICOSCONJ"].max()
+        st.markdown(f"Your favorite command is **{favorite_command}** 🎈")
+        
+    if __name__ == "__main__":
+        df = ler_planilha()
+        df["CONCLUSAO"] = pd.to_datetime(df["CONCLUSAO"]).dt.date
+
+        data_inicial_filter = st.date_input("Data Inicial:", value=df["CONCLUSAO"].min())
+        data_final_filter = st.date_input("Data Final:", value=df["CONCLUSAO"].max())
+
+        tipo_options = sorted(list(df['TIPO'].unique()))
+        tipo_filter = st.multiselect("Tipo:", tipo_options)
+
+        status_options = sorted(list(df['STATUS'].unique()))
+        status_filter = st.multiselect("Status:", status_options)
+
+        rota_options = sorted(list(df['ROTA'].unique()))
+        rota_filter = st.multiselect("Rotas:", rota_options)
+
+        usuario_options = sorted(list(df['USUARIO'].unique()))
+        usuario_filter = st.multiselect("Usuário:", usuario_options)
+
+        etapa_options = sorted(list(df['ETAPA'].unique()))
+        etapa_filter = st.multiselect("Etapa:", etapa_options)
+
+
+
+        df_filtered = aplicar_filtros(df, rota_filter, status_filter, tipo_filter, usuario_filter, data_inicial_filter, data_final_filter, etapa_filter)
+
+        # Crie duas colunas lado a lado
+        col1, col2 = st.columns(2)
+        # Botão "Apresentar Tabela"
+        if col1.button("Apresentar Tabela"):
+            if df_filtered.empty:
+                st.warning("Nenhum resultado encontrado. Refine os filtros e tente novamente.")
+            else:
+                mostrar_dataframe(df_filtered)
+        # Botão "Gerar Gráfico"
+        if col2.button("Gerar Gráfico"):
+            if df_filtered.empty:
+                st.warning("Nenhum resultado encontrado. Refine os filtros e tente novamente.")
+            else:
+                gerar_grafico(df_filtered)
+
+
