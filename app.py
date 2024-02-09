@@ -1,4 +1,6 @@
 import pandas as pd
+import locale
+from datetime import datetime
 from numpy.core.fromnumeric import size
 import streamlit as st  
 import plotly.express as px
@@ -65,27 +67,39 @@ if Page_operation == 'O&M-1ªtranche-Lote1(Cruzeiro do SUl - AC)':
     if __name__ == "__main__":
         df = ler_planilha()
         df["DTCONCLUSAO"] = pd.to_datetime(df["DTCONCLUSAO"]).dt.date
-        etapa_options = sorted(list(df['ORIGEM'].unique()))
-        etapa_filter = st.multiselect("Etapa:", etapa_options)
 
-        rota_options = sorted(list(df['ROTA'].unique()))
-        rota_filter = st.multiselect("Rotas:", rota_options)
+        # Configurando data com lib python Locale:
+        locale.setlocale(locale.LC_TIME,'pt_BR.UTF-8')
+        #Criando duas colunas para os seletores de data inicial e final:
+        col1_dt, col2_dt = st.columns(2)
+        data_inicial_filter = col1_dt.date_input("Data Inicial:", value=df["DTCONCLUSAO"].min())
+        data_final_filter = col2_dt.date_input("Data Final:", value=df["DTCONCLUSAO"].max())
+        # Criando duas colunas para caixa de opçoes curtas com origem e tipo
+        col_origem, col_tipo = st.columns(2)
+        origem_options = sorted(list(df['ORIGEM'].unique()))
+        origem_filter = col_origem.multiselect("Origem:", origem_options)
+
+        tipo_options = sorted(list(df['TIPO'].unique()))
+        tipo_filter = col_tipo.multiselect("Tipo:", tipo_options)
 
         status_options = sorted(list(df['STATUS'].unique()))
         status_filter = st.multiselect("Status:", status_options)
 
-        tipo_options = sorted(list(df['TIPO'].unique()))
-        tipo_filter = st.multiselect("Tipo:", tipo_options)
-
-        executor_options = sorted(list(df['EXECUTOR'].unique()))
-        executor_filter = st.multiselect("Usuário:", executor_options)
-
-
-
-        data_inicial_filter = st.date_input("Data Inicial:", value=df["DTCONCLUSAO"].min())
-        data_final_filter = st.date_input("Data Final:", value=df["DTCONCLUSAO"].max())
-
-        df_filtered = aplicar_filtros(df, rota_filter, status_filter, tipo_filter, executor_filter, data_inicial_filter, data_final_filter, etapa_filter)
+        rota_options = sorted(list(df.loc[df['ROTA'].notna(), 'ROTA'].unique()))
+        rota_check_all = st.checkbox("Selecionar todas Rotas")
+        if rota_check_all:
+            rota_filter = [value for value in rota_options if value != 'nan']
+        else:
+            rota_filter = st.multiselect("Rotas:", rota_options)
+        
+        executor_options = sorted(list(df.loc[df['EXECUTOR'].notna(), 'EXECUTOR'].unique()))
+        executor_check_all = st.checkbox("Selecionar todos Executores")
+        if executor_check_all:
+            executor_filter = [value for value in executor_options if value != 'nan']
+        else:
+            executor_filter = st.multiselect("Usuário:", executor_options)
+        
+        df_filtered = aplicar_filtros(df, rota_filter, status_filter, tipo_filter, executor_filter, data_inicial_filter, data_final_filter, origem_filter)
 
         # Crie duas colunas lado a lado
         col1, col2 = st.columns(2)
@@ -290,4 +304,6 @@ if Page_operation == 'Comissonamento-2ªtranche-Lote3(Sorriso - MT)':
             else:
                 gerar_grafico(df_filtered)
 
+# Personalização de cor primaria hexagonal - #feb274
+# Personalização de cor segundaria hexagonal - #3974b8
 
