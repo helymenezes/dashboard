@@ -22,7 +22,7 @@ if Page_operation == 'O&M-1ªtranche-Lote1(Cruzeiro do SUl - AC)':
         excluir_status = ['TREINAMENTO', 'CADASTRO', 'TREINAMENTO']
         excluir_usuario = ['LUIZ.CARLOS']
         excluir_rota = [55, 70]
-        df_bd = pd.read_excel(r'C:\Users\helym\projeto_python\dash\dash_oem\content\base_sip_Concluido.xlsx')
+        df_bd = pd.read_excel(r"C:\Users\HELY-DELL\projetos_python\dashboard\content\base_sip_Concluido.xlsx")
         df = df_bd[~df_bd['STATUS'].isin(excluir_status)]
         df = df[~df['EXECUTOR'].isin(excluir_usuario)]
         df = df[~df['ROTA'].isin(excluir_rota)]
@@ -127,7 +127,7 @@ if Page_operation == 'Comissonamento-2ªtranche-Lote1&2(Cruzeiro do sUl/Sena Mad
         excluir_status = ['TREINAMENTO', 'CADASTRO', 'TREINAMENTO']
         excluir_usuario = ['LUIZ.CARLOS']
         excluir_rota = [55, 70]
-        df_bd = pd.read_excel(r'C:\Users\helym\projeto_python\dash\dash_oem\content\base_sip_instalacoes_Geral_ac.xlsx')
+        df_bd = pd.read_excel(r"C:\Users\HELY-DELL\projetos_python\dashboard\content\base_sip_instalacoes_Geral_ac.xlsx")
         df = df_bd[~df_bd['STATUS'].isin(excluir_status)]
         df = df[~df['USUARIO'].isin(excluir_usuario)]
         df = df[~df['ROTA'].isin(excluir_rota)]
@@ -173,23 +173,26 @@ if Page_operation == 'Comissonamento-2ªtranche-Lote1&2(Cruzeiro do sUl/Sena Mad
         df = ler_planilha()
         df["CONCLUSAO"] = pd.to_datetime(df["CONCLUSAO"]).dt.date
 
-        data_inicial_filter = st.date_input("Data Inicial:", value=df["CONCLUSAO"].min())
-        data_final_filter = st.date_input("Data Final:", value=df["CONCLUSAO"].max())
+        col01_dt, col02_dt = st.columns(2)
+        data_inicial_filter = col01_dt.date_input("Data Inicial:", value=df["CONCLUSAO"].min())
+        data_final_filter = col02_dt.date_input("Data Final:", value=df["CONCLUSAO"].max())
+
+        col01_tipo, col02_status, col3_etapa = st.columns(3)
+
+        etapa_options = sorted(list(df['ETAPA'].unique()))
+        etapa_filter = col3_etapa.multiselect("Etapa:", etapa_options)
 
         tipo_options = sorted(list(df['TIPO'].unique()))
-        tipo_filter = st.multiselect("Tipo:", tipo_options)
+        tipo_filter = col01_tipo.multiselect("Tipo:", tipo_options)
 
         status_options = sorted(list(df['STATUS'].unique()))
-        status_filter = st.multiselect("Status:", status_options)
+        status_filter = col02_status.multiselect("Status:", status_options)
 
         rota_options = sorted(list(df['ROTA'].unique()))
         rota_filter = st.multiselect("Rotas:", rota_options)
 
         usuario_options = sorted(list(df['USUARIO'].unique()))
         usuario_filter = st.multiselect("Usuário:", usuario_options)
-
-        etapa_options = sorted(list(df['ETAPA'].unique()))
-        etapa_filter = st.multiselect("Etapa:", etapa_options)
 
 
 
@@ -221,7 +224,7 @@ if Page_operation == 'Comissonamento-2ªtranche-Lote3(Sorriso - MT)':
         excluir_status = ['TREINAMENTO', 'CADASTRO', 'TREINAMENTO']
         excluir_usuario = ['LUIZ.CARLOS']
         excluir_rota = [55, 70]
-        df_bd = pd.read_excel(r'C:\Users\helym\projeto_python\dash\dash_oem\content\base_sip_instalacoes_Geral_mt.xlsx')
+        df_bd = pd.read_excel(r"C:\Users\HELY-DELL\projetos_python\dashboard\content\base_sip_instalacoes_Geral_mt.xlsx")
         df = df_bd[~df_bd['STATUS'].isin(excluir_status)]
         df = df[~df['USUARIO'].isin(excluir_usuario)]
         df = df[~df['ROTA'].isin(excluir_rota)]
@@ -267,24 +270,26 @@ if Page_operation == 'Comissonamento-2ªtranche-Lote3(Sorriso - MT)':
         df = ler_planilha()
         df["CONCLUSAO"] = pd.to_datetime(df["CONCLUSAO"]).dt.date
 
-        data_inicial_filter = st.date_input("Data Inicial:", value=df["CONCLUSAO"].min())
-        data_final_filter = st.date_input("Data Final:", value=df["CONCLUSAO"].max())
+        col01_dt, col02_dt = st.columns(2)
+        data_inicial_filter = col01_dt.date_input("Data Inicial:", value=df["CONCLUSAO"].min())
+        data_final_filter = col02_dt.date_input("Data Final:", value=df["CONCLUSAO"].max())
+
+        col01_tipo, col02_status, col3_etapa = st.columns(3)
+
+        etapa_options = sorted(list(df['ETAPA'].unique()))
+        etapa_filter = col3_etapa.multiselect("Etapa:", etapa_options)
 
         tipo_options = sorted(list(df['TIPO'].unique()))
-        tipo_filter = st.multiselect("Tipo:", tipo_options)
+        tipo_filter = col01_tipo.multiselect("Tipo:", tipo_options)
 
         status_options = sorted(list(df['STATUS'].unique()))
-        status_filter = st.multiselect("Status:", status_options)
+        status_filter = col02_status.multiselect("Status:", status_options)
 
         rota_options = sorted(list(df['ROTA'].unique()))
         rota_filter = st.multiselect("Rotas:", rota_options)
 
         usuario_options = sorted(list(df['USUARIO'].unique()))
         usuario_filter = st.multiselect("Usuário:", usuario_options)
-
-        etapa_options = sorted(list(df['ETAPA'].unique()))
-        etapa_filter = st.multiselect("Etapa:", etapa_options)
-
 
 
         df_filtered = aplicar_filtros(df, rota_filter, status_filter, tipo_filter, usuario_filter, data_inicial_filter, data_final_filter, etapa_filter)
@@ -306,4 +311,3 @@ if Page_operation == 'Comissonamento-2ªtranche-Lote3(Sorriso - MT)':
 
 # Personalização de cor primaria hexagonal - #feb274
 # Personalização de cor segundaria hexagonal - #3974b8
-
