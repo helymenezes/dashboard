@@ -188,13 +188,30 @@ if Page_operation == 'Comissonamento-2ªtranche-Lote1&2(Cruzeiro do sUl/Sena Mad
         status_options = sorted(list(df['STATUS'].unique()))
         status_filter = col02_status.multiselect("Status:", status_options)
 
-        rota_options = sorted(list(df['ROTA'].unique()))
-        rota_filter = st.multiselect("Rotas:", rota_options)
+        rota_options = sorted(list(df.loc[df['ROTA'].notna(),'ROTA'].unique()))
 
-        usuario_options = sorted(list(df['USUARIO'].unique()))
-        usuario_filter = st.multiselect("Usuário:", usuario_options)
+        rota_check_all = st.checkbox("Selecionar projeto Geral")
+        rota_check_all_hoppecke = st.checkbox("Selecionar projeto Hoppecke")
+        rota_check_all_intelbras = st.checkbox("Selecionar projeto Intelbras")
 
+        if rota_check_all_hoppecke:
+            hoppecke_options = [rota for rota in rota_options if 50 <= int(rota) <= 59]
+            rota_filter = st.multiselect("Rotas Hoppecke:", hoppecke_options, default=hoppecke_options)
+        elif rota_check_all_intelbras:
+            intelbras_options = [rota for rota in rota_options if 1 <= int(rota) <= 49]
+            rota_filter = st.multiselect("Rotas Intelbras:", intelbras_options, default=intelbras_options)
+        elif rota_check_all:
+            rota_filter = st.multiselect("Rotas:", rota_options, default=rota_options)
+        else:
+            rota_filter = st.multiselect("Rotas:", rota_options)
 
+        usuario_options = sorted(list(df.loc[df['USUARIO'].notna(),'USUARIO'].unique()))
+        usuario_check_all = st.checkbox("Selecionar todos Executores")
+
+        if usuario_check_all:
+            usuario_filter = st.multiselect("Usuário:", usuario_options, default=usuario_options)
+        else:
+            usuario_filter = st.multiselect("Usuário:", usuario_options)
 
         df_filtered = aplicar_filtros(df, rota_filter, status_filter, tipo_filter, usuario_filter, data_inicial_filter, data_final_filter, etapa_filter)
 
@@ -285,12 +302,21 @@ if Page_operation == 'Comissonamento-2ªtranche-Lote3(Sorriso - MT)':
         status_options = sorted(list(df['STATUS'].unique()))
         status_filter = col02_status.multiselect("Status:", status_options)
 
-        rota_options = sorted(list(df['ROTA'].unique()))
-        rota_filter = st.multiselect("Rotas:", rota_options)
+        rota_options = sorted(list(df.loc[df['ROTA'].notna(),'ROTA'].unique()))
+        rota_check_all = st.checkbox("Selecionar todas Rotas")
 
-        usuario_options = sorted(list(df['USUARIO'].unique()))
-        usuario_filter = st.multiselect("Usuário:", usuario_options)
+        if rota_check_all:
+            rota_filter = st.multiselect("Rotas:", rota_options, default=rota_options)
+        else:
+            rota_filter = st.multiselect("Rotas:", rota_options)
 
+        usuario_options = sorted(list(df.loc[df['USUARIO'].notna(),'USUARIO'].unique()))
+        usuario_check_all = st.checkbox("Selecionar todos Executores")
+
+        if usuario_check_all:
+            usuario_filter = st.multiselect("Usuário:", usuario_options, default=usuario_options)
+        else:
+            usuario_filter = st.multiselect("Usuário:", usuario_options)
 
         df_filtered = aplicar_filtros(df, rota_filter, status_filter, tipo_filter, usuario_filter, data_inicial_filter, data_final_filter, etapa_filter)
 
