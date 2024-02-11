@@ -35,7 +35,7 @@ if Page_operation == 'O&M-1ªtranche-Lote1(Cruzeiro do SUl - AC)':
         return df
     
     @st.cache_data
-    def aplicar_filtros(df, rota_value, status_value, tipo_value, executor_value, data_inicial, data_final, etapa_value):
+    def aplicar_filtros(df, rota_value, status_value, tipo_value, executor_value, data_inicial, data_final, etapa_value, tipocausa_value):
         """Aplica filtros a uma planilha."""
         df_filtered = df[
             df["ROTA"].isin(rota_value) &
@@ -43,6 +43,7 @@ if Page_operation == 'O&M-1ªtranche-Lote1(Cruzeiro do SUl - AC)':
             df["TIPO"].isin(tipo_value) &
             df["EXECUTOR"].isin(executor_value) &
             df["ORIGEM"].isin(etapa_value) &
+            df["TIPOCAUSA"].isin(tipocausa_value) &
             (df["DTCONCLUSAO"] >= data_inicial) &
             (df["DTCONCLUSAO"] <= data_final)
         ]
@@ -69,7 +70,18 @@ if Page_operation == 'O&M-1ªtranche-Lote1(Cruzeiro do SUl - AC)':
         # Acessa o valor máximo da coluna "NUMOS"
         favorite_command = df_filtered["NUMOS"].max()
         st.markdown(f"Your favorite command is **{favorite_command}** 🎈")
-        
+
+    def mostrar_dataframe_2():
+        table_dinamic = st.dataframe(pd.pivot_table(df_filtered,
+                                                    values=['NUMOS'],
+                                                    index=['STATUS'],
+                                                    columns=['ROTA'],  # Alteração aqui
+                                                    fill_value=0,
+                                                    aggfunc={'NUMOS':'count'},
+                                                    margins=True,
+                                                    margins_name='Total'))
+
+
     if __name__ == "__main__":
         df = ler_planilha()
         df["DTCONCLUSAO"] = pd.to_datetime(df["DTCONCLUSAO"]).dt.date
@@ -104,11 +116,18 @@ if Page_operation == 'O&M-1ªtranche-Lote1(Cruzeiro do SUl - AC)':
             executor_filter = [value for value in executor_options if value != 'nan']
         else:
             executor_filter = st.multiselect("Usuário:", executor_options)
+
+        tipocausa_options = sorted(list(df.loc[df['TIPOCAUSA'].notna(),'TIPOCAUSA'].unique()))
+        tipocausa_check_all = st.checkbox("Selecionar todas as Causas")
+        if tipocausa_check_all:
+            tipocausa_filter = st.multiselect("Tipo Causa: ", tipocausa_options, default= tipocausa_options)
+        else:
+            tipocausa_filter = st.multiselect("Tipo Causa", tipocausa_options)
         
-        df_filtered = aplicar_filtros(df, rota_filter, status_filter, tipo_filter, executor_filter, data_inicial_filter, data_final_filter, origem_filter)
+        df_filtered = aplicar_filtros(df, rota_filter, status_filter, tipo_filter, executor_filter, data_inicial_filter, data_final_filter, origem_filter, tipocausa_filter)
 
         # Crie duas colunas lado a lado
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
         # Botão "Apresentar Tabela"
         if col1.button("Apresentar Tabela"):
             if df_filtered.empty:
@@ -121,7 +140,12 @@ if Page_operation == 'O&M-1ªtranche-Lote1(Cruzeiro do SUl - AC)':
                 st.warning("Nenhum resultado encontrado. Refine os filtros e tente novamente.")
             else:
                 gerar_grafico(df_filtered)
-
+        # Botão "Apresentar Tabela"
+        if col3.button("Produção por dia"):
+            if df_filtered.empty:
+                st.warning("Nenhum resultado encontrado. Refine os filtros e tente novamente.")
+            else:
+                mostrar_dataframe_2()
 #Gráfico e tabela  Comissionamento 2ª Tranche lote 01 & Lote 02:
 
 if Page_operation == 'Comissonamento-2ªtranche-Lote1&2(Cruzeiro do sUl/Sena Madureira - AC)':
