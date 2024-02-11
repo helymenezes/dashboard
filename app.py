@@ -17,17 +17,23 @@ if Page_operation == 'O&M-1ªtranche-Lote1(Cruzeiro do SUl - AC)':
     st.title("PRODUÇÃO O&M")    
 
     @st.cache_data
+
     def ler_planilha():
-        """Lê uma planilha do Excel."""
         excluir_status = ['TREINAMENTO', 'CADASTRO', 'TREINAMENTO']
-        excluir_usuario = ['LUIZ.CARLOS']
-        excluir_rota = [55, 70]
+        excluir_usuario = ['MARCO', 'LUIZ.CARLOS']
+        excluir_rota = [70, 55]
         df_bd = pd.read_excel(r"C:\Users\HELY-DELL\projetos_python\dashboard\content\base_sip_Concluido.xlsx")
+
+        # Aplicar os filtros sequencialmente
         df = df_bd[~df_bd['STATUS'].isin(excluir_status)]
         df = df[~df['EXECUTOR'].isin(excluir_usuario)]
         df = df[~df['ROTA'].isin(excluir_rota)]
-        return df
 
+        # Converter apenas as colunas 'NUMOS' e 'IDSIGFI' para strings
+        df[['NUMOS', 'IDSIGFI','UC']] = df[['NUMOS', 'IDSIGFI','UC']].astype('str')
+
+        return df
+    
     @st.cache_data
     def aplicar_filtros(df, rota_value, status_value, tipo_value, executor_value, data_inicial, data_final, etapa_value):
         """Aplica filtros a uma planilha."""
@@ -206,7 +212,7 @@ if Page_operation == 'Comissonamento-2ªtranche-Lote1&2(Cruzeiro do sUl/Sena Mad
             rota_filter = st.multiselect("Rotas:", rota_options)
 
         usuario_options = sorted(list(df.loc[df['USUARIO'].notna(),'USUARIO'].unique()))
-        usuario_check_all = st.checkbox("Selecionar todos Executores")
+        usuario_check_all = st.checkbox("Selecionar todos Usuários")
 
         if usuario_check_all:
             usuario_filter = st.multiselect("Usuário:", usuario_options, default=usuario_options)
