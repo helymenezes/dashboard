@@ -65,23 +65,55 @@ if Page_operation == 'O&M-1ªtranche-Lote1(Cruzeiro do SUl - AC)':
 
         # Exibe o DataFrame com a coluna de checkboxes
         st.dataframe(df_filtered[['Selecionar', 'NUMOS', 'NUMOCORRENCIA', 'UC', 'IDSIGFI', 'TIPOCAUSA', 
-                                'NOMECLIENTE', 'ROTA', 'STATUS', 'EXECUTOR', 'DTCONCLUSAO', 'LATLONCON']])
+                                'NOMECLIENTE', 'ROTA', 'STATUS', 'EXECUTOR', 'DTCONCLUSAO', 'LATLONCON','DESCADICIONALPROG']])
         
         # Acessa o valor máximo da coluna "NUMOS"
         favorite_command = df_filtered["NUMOS"].max()
         st.markdown(f"Your favorite command is **{favorite_command}** 🎈")
 
     def mostrar_dataframe_2():
+        column_mapping = {
+            'NUMOS': 'Quant./Rota',
+            'ROTA': 'Rota'
+        }
+        df_filtered.rename(columns=column_mapping, inplace = True )
         table_dinamic = st.dataframe(pd.pivot_table(df_filtered,
-                                                    values=['NUMOS'],
-                                                    index=['STATUS'],
+                                                        values=['Quant./Rota'],
+                                                        index=['STATUS'],
+                                                        columns=['Rota'],
+                                                        fill_value=0,
+                                                        aggfunc={'Quant./Rota': 'count'},
+                                                        margins=True,
+                                                        margins_name='Total'),
+                                        width=1000)
+        
+    def mostrar_dataframe_3():
+        column_mapping_2 = {
+            'NUMOS':'Quant./Usuário'
+        }
+        df_filtered.rename(columns=column_mapping_2, inplace = True )
+        table_dinamic = st.dataframe(pd.pivot_table(df_filtered,
+                                                    values=['Quant./Usuário'],
+                                                    index=['EXECUTOR'],
                                                     columns=['ROTA'],  # Alteração aqui
                                                     fill_value=0,
-                                                    aggfunc={'NUMOS':'count'},
+                                                    aggfunc={'Quant./Usuário':'count'},
                                                     margins=True,
                                                     margins_name='Total'))
-
-
+    def mostrar_dataframe_4():
+            column_mapping_3 = {
+                'NUMOS':'Quant./Tipo O.S'
+            }
+            df_filtered.rename(columns=column_mapping_3, inplace = True )
+            table_dinamic = st.dataframe(pd.pivot_table(df_filtered,
+                                                        values=['Quant./Tipo O.S'],
+                                                        index=['TIPO'],
+                                                        columns=['EXECUTOR'],  # Alteração aqui
+                                                        fill_value=0,
+                                                        aggfunc={'Quant./Tipo O.S':'count'},
+                                                        margins=True,
+                                                        margins_name='Total'))
+  
     if __name__ == "__main__":
         df = ler_planilha()
         df["DTCONCLUSAO"] = pd.to_datetime(df["DTCONCLUSAO"]).dt.date
@@ -127,25 +159,41 @@ if Page_operation == 'O&M-1ªtranche-Lote1(Cruzeiro do SUl - AC)':
         df_filtered = aplicar_filtros(df, rota_filter, status_filter, tipo_filter, executor_filter, data_inicial_filter, data_final_filter, origem_filter, tipocausa_filter)
 
         # Crie duas colunas lado a lado
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4, col5 = st.columns(5)
         # Botão "Apresentar Tabela"
-        if col1.button("Apresentar Tabela"):
+        if col1.button("Producão"):
             if df_filtered.empty:
                 st.warning("Nenhum resultado encontrado. Refine os filtros e tente novamente.")
             else:
                 mostrar_dataframe(df_filtered)
+
+        # Botão "Apresentar Tabela Produção dia"
+        if col3.button("St/Validação"):
+            if df_filtered.empty:
+                st.warning("Nenhum resultado encontrado. Refine os filtros e tente novamente.")
+            else:
+                mostrar_dataframe_2()
+
+        # Botão "Apresentar Tabela Produção status"
+        if col4.button("Prod./Usuário"):
+            if df_filtered.empty:
+                st.warning("Nenhum resultado encontrado. Refine os filtros e tente novamente.")
+            else:
+                mostrar_dataframe_3()
+
+        # Botão "Apresentar Tabela Produção Tipo de OS"
+        if col5.button("Prod./TIPO OS"):
+            if df_filtered.empty:
+                st.warning("Nenhum resultado encontrado. Refine os filtros e tente novamente.")
+            else:
+                mostrar_dataframe_4()
+
         # Botão "Gerar Gráfico"
         if col2.button("Gerar Gráfico"):
             if df_filtered.empty:
                 st.warning("Nenhum resultado encontrado. Refine os filtros e tente novamente.")
             else:
                 gerar_grafico(df_filtered)
-        # Botão "Apresentar Tabela"
-        if col3.button("Produção por dia"):
-            if df_filtered.empty:
-                st.warning("Nenhum resultado encontrado. Refine os filtros e tente novamente.")
-            else:
-                mostrar_dataframe_2()
 #Gráfico e tabela  Comissionamento 2ª Tranche lote 01 & Lote 02:
 
 if Page_operation == 'Comissonamento-2ªtranche-Lote1&2(Cruzeiro do sUl/Sena Madureira - AC)':
