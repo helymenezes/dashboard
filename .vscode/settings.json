@@ -1,3 +1,7 @@
 {
-    "dataWrangler.experiments.fastCsvParsing": true
+    "dataWrangler.experiments.fastCsvParsing": true,
+    "python.analysis.extraPaths": [
+        "./pages",
+        "./bd"
+    ]
 }
