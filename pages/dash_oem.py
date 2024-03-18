@@ -3,33 +3,33 @@ import pandas as pd
 import plotly.express as px
 from datetime import timedelta
 
-@st.cache
+@st.cache_data
 def load_data():
     # Substitua este bloco com a carga dos seus dados
-    data = pd.read_excel(r'C:\Users\helym\.streamlit\dashboard\content\base_sip_Concluido.xlsx')
+    data = pd.read_excel(r"C:\Users\HELY-DELL\.streamlit\dashboard\content\base_sip_Concluido.xlsx")
     df = pd.DataFrame(data)
     df = df.loc[df['ORIGEM'] == 'ENERGISA']
     str_columns = ['NUMOS', 'NUMOCORRENCIA', 'ROTA', 'UC', 'IDSIGFI', 'OBRA']
     df[str_columns] = df[str_columns].astype('str')
     date_columns = ['DTCONCLUSAO', 'DTAINC', 'DTAALT', 'DTINIDESLOCAMENTO', 'COMPETENCIA', 'DTAHORARECLAMACAO', 'DTCHEGADA']
     df[date_columns] = df[date_columns].apply(pd.to_datetime)
-    #df['PRAZO'] = df['DTINIDESLOCAMENTO'] + timedelta(days=7)
+    df['PRAZO'] = df['DTINIDESLOCAMENTO'] + timedelta(days=7)
     return df
 
 def app_oem():
     df = load_data()
 
     # Separar das preventivas das corretivas.
-    df_prev = df.loc[df['TIPO'] == 'PREVENTIVAS']
-    df_corr = df.loc[df['TIPO'] == 'CORRETIVAS']
+    df_prev = df.loc[df['IDTIPOMANUTENCAO'] == 3]
+    df_corr = df.loc[df['IDTIPOMANUTENCAO'] == 4]
     
     #Preciso saber quantas os's preventivas foram executada no dia[card]
-    date_ultimate = df_prev['DATACONCLUSAO'].max()
-    current_day_prev = df_prev[df_prev['DATACONCLUSAO'] == date_ultimate]
+    date_ultimate = df_prev['DTCONCLUSAO'].max()
+    current_day_prev = df_prev[df_prev['DTCONCLUSAO'] == date_ultimate]
     df_prev_day_prev = current_day_prev['NUMOS'].count()
     #Preciso saber quantas os's corretivas foram executada no dia[card]
-    date_ultimate = df_corr['DATACONCLUSAO'].max()
-    current_day_corr = df_corr[df_corr['DATACONCLUSAO'] == date_ultimate]
+    date_ultimate = df_corr['DTCONCLUSAO'].max()
+    current_day_corr = df_corr[df_corr['DTCONCLUSAO'] == date_ultimate]
     df_prev_day_corr = current_day_corr['NUMOS'].count()
     
     # Criar os componentes do dashboard
@@ -57,7 +57,7 @@ def app_oem():
 
 #Executar o aplicativo Streamlit
 if __name__ == '__main__':
-    st.write("Exemplo de dashboard interativo usando Streamlit.")
+    st.write("Acompanhamento de produção")
     dashboard_clicked = st.sidebar.button("Dashboard O&M", type="primary")
     if dashboard_clicked:
         app_oem()

@@ -11,7 +11,7 @@ def filter_oem():
         excluir_status = ['TREINAMENTO', 'CADASTRO', 'TREINAMENTO']
         excluir_usuario = ['MARCO', 'LUIZ.CARLOS']
         excluir_rota = [70, 55]
-        df_bd = pd.read_excel(r"C:\Users\helym\.streamlit\dashboard\content\base_sip_Concluido.xlsx")
+        df_bd = pd.read_excel(r"C:\Users\HELY-DELL\.streamlit\dashboard\content\base_sip_Concluido.xlsx")
 
         # Aplicar os filtros sequencialmente
         df = df_bd[~df_bd['STATUS'].isin(excluir_status)]
