@@ -12,7 +12,7 @@ def filter_com():
         excluir_status = ['TREINAMENTO', 'CADASTRO', 'TREINAMENTO']
         excluir_usuario = ['LUIZ.CARLOS']
         excluir_rota = [55, 70]
-        df_bd = pd.read_excel(r"C:\Users\helym\.streamlit\dashboard\content\base_sip_instalacoes_Geral_ac.xlsx")
+        df_bd = pd.read_excel(r"content\base_sip_instalacoes_Geral_ac.xlsx")
         df = df_bd[~df_bd['STATUS'].isin(excluir_status)]
         df = df[~df['USUARIO'].isin(excluir_usuario)]
         df = df[~df['ROTA'].isin(excluir_rota)]
