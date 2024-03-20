@@ -5,12 +5,15 @@ from datetime import timedelta
 
 @st.cache_data
 def load_data_cad():
-    #Carregamento do dataframe de cadastro
+    # Carregamento do dataframe de cadastro
     data_cad = pd.read_excel(r"content\cadastro.xlsx")
     date_columns = ['DTCONCLUSAO', 'DTAINC', 'DTAALT', 'DTINIDESLOCAMENTO', 'COMPETENCIA', 'DTAHORARECLAMACAO', 'DTCHEGADA']
     data_cad[date_columns] = data_cad[date_columns].apply(pd.to_datetime)
     data_cad['PRAZO'] = data_cad['DTINIDESLOCAMENTO'] + timedelta(days=7)
+    data_cad = data_cad.query("IDORIGEM == 2 & IDTIPOMANUTENCAO == 3")
     return data_cad
+
+@st.cache_data
 def load_data():
     # Substitua este bloco com a carga dos seus dados
     df = pd.read_excel(r"content\base_sip_Concluido.xlsx")
@@ -20,14 +23,14 @@ def load_data():
 
 def app_oem():
     df = load_data()
-    #Buscar ultima data de preventvas e corretivas validadas
+    # Buscar ultima data de preventvas e corretivas validadas
     lastdt = df['DATACONCLUSAO'].max()
     order_executed = df[df['DATACONCLUSAO'] == lastdt]
     # Separar das preventivas das corretivas já validadas.
     df_prev = order_executed.query("IDORIGEM == 2 & IDTIPOMANUTENCAO == 4 & STATUSSRV == 2")
     df_corr = order_executed.query("IDORIGEM == 2 & IDTIPOMANUTENCAO == 3 & STATUSSRV == 2")
     
-    #Preciso saber quantas os's preventivas e corretivas  foram executada no dia[card]
+    # Preciso saber quantas os's preventivas e corretivas  foram executada no dia[card]
     count_prev = df_prev['NUMOS'].count()
     count_curr = df_corr['NUMOS'].count()
     
@@ -63,9 +66,15 @@ def app_oem():
     fig = px.bar(executions, x='DATACONCLUSAO', y='Quantidade', labels={'Quantidade': 'Ordens de Serviço Executadas', 'DATACONCLUSAO': 'Data'})
     st.plotly_chart(fig)
 
-#Executar o aplicativo Streamlit
+# Executar o aplicativo Streamlit
 if __name__ == '__main__':
     st.write("Acompanhamento de produção")
+    # Recarregar os dados ao clicar no botão
+    reload_data = st.button("Recarregar Dados")
+    if reload_data:
+        load_data_cad()  # Recarrega os dados do cadastro
+        load_data()      # Recarrega os dados principais
+        st.success("Dados recarregados com sucesso!")
     dashboard_clicked = st.sidebar.button("Dashboard O&M", type="primary")
     if dashboard_clicked:
         app_oem()
