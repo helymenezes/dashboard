@@ -1,7 +1,51 @@
 import pandas as pd
 import streamlit as st  
 import plotly.express as px
+import sqlite3
 
+#Função para conectar ao Banco de Dados SQLite
+def conectar_bd():
+    conn = sqlite3.connect('dados_comissionamento.db')
+    return conn
+# Passo 3: Criar a Tabela no Banco de Dados
+def criar_tabela():
+    conn = conectar_bd()
+    cursor = conn.cursor()
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS comissionamento (
+        IDSERVICOSCONJ INTEGER PRIMARY KEY,
+        ROTA INTEGER,
+        CONCLUSAO DATE,
+        STATUS TEXT,
+        USUARIO TEXT,
+        NOMEDOCLIENTE TEXT,
+        OBSERVACAOINT TEXT,
+        LATLONCONF TEXT,
+        ENDERECO TEXT,
+        MUNICIPIO TEXT,
+        ETAPA TEXT,
+        USUARIOALT TEXT,
+        LATITUDE REAL,
+        LONGITUDE REAL
+    )
+    """)
+    conn.commit()
+    conn.close()
+ #Modificar a Função de Armazenamento de Dados   
+def armazenar_dados(df):
+    conn = conectar_bd()
+    cursor = conn.cursor()
+    for _, row in df.iterrows():
+        try:
+            cursor.execute("""
+            INSERT INTO comissionamento (IDSERVICOSCONJ, ROTA, CONCLUSAO, STATUS, USUARIO, NOMEDOCLIENTE, OBSERVACAOINT, LATLONCONF, ENDERECO, MUNICIPIO, ETAPA, USUARIOALT, LATITUDE, LONGITUDE)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (row['IDSERVICOSCONJ'], row['ROTA'], row['CONCLUSAO'], row['STATUS'], row['USUARIO'], row['NOMEDOCLIENTE'], row['OBSERVACAOINT'], row['LATLONCONF'], row['ENDERECO'], row['MUNICIPIO'], row['ETAPA'], row['USUARIOALT'], row['LATITUDE'], row['LONGITUDE']))
+            conn.commit()
+        except sqlite3.IntegrityError as e:
+            st.warning(f"Dados duplicados não adicionados: {row['IDSERVICOSCONJ']}. Erro: {e}")
+    conn.close()
+    st.success("Dados armazenados com sucesso no banco de dados.")
 
 def filter_com():
     st.title("COMISSIONAMENTOS LOTE 01 & 02")    
@@ -21,7 +65,7 @@ def filter_com():
     @st.cache_data
     def aplicar_filtros(df, rota_value, status_value, tipo_value, usuario_value, data_inicial, data_final, etapa_value):
         """Aplica filtros a uma planilha."""
-        df_filtered = df[
+        df_filtered_ac = df[
             df["ROTA"].isin(rota_value) &
             df["STATUS"].isin(status_value) &
             df["TIPO"].isin(tipo_value) &
@@ -30,28 +74,28 @@ def filter_com():
             (df["CONCLUSAO"] >= data_inicial) &
             (df["CONCLUSAO"] <= data_final)
         ]
-        return df_filtered
+        return df_filtered_ac
 
-    def gerar_grafico(df_filtered):
+    def gerar_grafico(df_filtered_ac):
         """Gera um gráfico com base nos dados filtrados."""
-        grafico = pd.pivot_table(df_filtered, values='IDSERVICOSCONJ', index=['ROTA'], columns=['STATUS'], aggfunc='count')
+        grafico = pd.pivot_table(df_filtered_ac, values='IDSERVICOSCONJ', index=['ROTA'], columns=['STATUS'], aggfunc='count')
         fig = px.bar(grafico, barmode='stack')
         fig.update_layout(xaxis=dict(tickmode='array', tickvals=list(grafico.index), ticktext=list(grafico.index)))
         fig.update_layout(xaxis_title='ROTA', yaxis_title='CONTAGEM', hovermode='closest')
         fig.update_layout(height=800, width=1280)
         st.plotly_chart(fig)
 
-    def mostrar_dataframe(df_filtered):
+    def mostrar_dataframe(df_filtered_ac):
         """Mostra o DataFrame em formato de tabela."""
         # Adiciona uma coluna de checkboxes ao DataFrame
-        df_filtered['Selecionar'] = [False] * len(df_filtered)
+        df_filtered_ac['Selecionar'] = [False] * len(df_filtered_ac)
 
         # Exibe o DataFrame com a coluna de checkboxes
-        st.dataframe(df_filtered[['Selecionar','IDSERVICOSCONJ','ROTA','CONCLUSAO','STATUS','USUARIO',
+        st.dataframe(df_filtered_ac[['Selecionar','IDSERVICOSCONJ','ROTA','CONCLUSAO','STATUS','USUARIO',
                                   'NOMEDOCLIENTE','OBSERVACAOINT','LATLONCONF','ENDERECO','MUNICIPIO','ETAPA','USUARIOALT']])
         
         # Acessa o valor máximo da coluna "IDSERVICOSCONJ"
-        favorite_command = df_filtered["IDSERVICOSCONJ"].max()
+        favorite_command = df_filtered_ac["IDSERVICOSCONJ"].max()
         st.markdown(f"Your favorite command is **{favorite_command}** 🎈")
         
         
@@ -98,19 +142,26 @@ def filter_com():
     else:
         usuario_filter = st.multiselect("Usuário:", usuario_options)
 
-    df_filtered = aplicar_filtros(df, rota_filter, status_filter, tipo_filter, usuario_filter, data_inicial_filter, data_final_filter, etapa_filter)
+    df_filtered_ac = aplicar_filtros(df, rota_filter, status_filter, tipo_filter, usuario_filter, data_inicial_filter, data_final_filter, etapa_filter)
 
     # Crie duas colunas lado a lado
     col1, col2 = st.columns(2)
     # Botão "Apresentar Tabela"
     if col1.button("Apresentar Tabela"):
-        if df_filtered.empty:
+        if df_filtered_ac.empty:
             st.warning("Nenhum resultado encontrado. Refine os filtros e tente novamente.")
         else:
-            mostrar_dataframe(df_filtered)
+            mostrar_dataframe(df_filtered_ac)
     # Botão "Gerar Gráfico"
     if col2.button("Gerar Gráfico"):
-        if df_filtered.empty:
+        if df_filtered_ac.empty:
             st.warning("Nenhum resultado encontrado. Refine os filtros e tente novamente.")
         else:
-            gerar_grafico(df_filtered)
+            gerar_grafico(df_filtered_ac)
+    #Botão de armazenamento no sqlite
+    if st.button("Armazenar Dados"):
+        if df_filtered_ac.empty:
+            st.warning("Não há dados para armazenar.")
+        else:
+            armazenar_dados(df_filtered_ac)
+filter_com()

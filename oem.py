@@ -26,7 +26,7 @@ def filter_oem():
     @st.cache_data
     def aplicar_filtros(df, rota_value, status_value, tipo_value, executor_value, data_inicial, data_final, etapa_value, tipocausa_value):
         """Aplica filtros a uma planilha."""
-        df_filtered = df[
+        df_filtered_oem = df[
             df["ROTA"].isin(rota_value) &
             df["STATUS"].isin(status_value) &
             df["TIPO"].isin(tipo_value) &
@@ -36,37 +36,41 @@ def filter_oem():
             (df["DTCONCLUSAO"] >= data_inicial) &
             (df["DTCONCLUSAO"] <= data_final)
         ]
-        return df_filtered
+        return df_filtered_oem
 
-    def gerar_grafico(df_filtered):
+    def gerar_grafico(df_filtered_oem):
         """Gera um gráfico com base nos dados filtrados."""
-        grafico = pd.pivot_table(df_filtered, values='NUMOS', index=['ROTA'], columns=['STATUS'], aggfunc='count')
+        grafico = pd.pivot_table(df_filtered_oem, values='NUMOS', index=['ROTA'], columns=['STATUS'], aggfunc='count')
         fig = px.bar(grafico, barmode='stack')
         fig.update_layout(xaxis=dict(tickmode='array', tickvals=list(grafico.index), ticktext=list(grafico.index)))
         fig.update_layout(xaxis_title='ROTA', yaxis_title='CONTAGEM', hovermode='closest')
         fig.update_layout(height=800, width=1280)
         st.plotly_chart(fig)
 
-    def mostrar_dataframe(df_filtered):
+    def mostrar_dataframe(df_filtered_oem):
         """Mostra o DataFrame em formato de tabela."""
         # Adiciona uma coluna de checkboxes ao DataFrame
-        df_filtered['Selecionar'] = [False] * len(df_filtered)
+        df_filtered_oem['Selecionar'] = [False] * len(df_filtered_oem)
 
         # Exibe o DataFrame com a coluna de checkboxes
-        st.dataframe(df_filtered[['Selecionar', 'NUMOS', 'NUMOCORRENCIA', 'UC', 'IDSIGFI', 'TIPOCAUSA', 
+        st.dataframe(df_filtered_oem[['Selecionar', 'NUMOS', 'NUMOCORRENCIA', 'UC', 'IDSIGFI', 'TIPOCAUSA', 
                                 'NOMECLIENTE', 'ROTA', 'STATUS', 'EXECUTOR', 'DTCONCLUSAO', 'LATLONCON','DESCADICIONALPROG']])
         
         # Acessa o valor máximo da coluna "NUMOS"
-        favorite_command = df_filtered["NUMOS"].max()
+        favorite_command = df_filtered_oem["NUMOS"].max()
         st.markdown(f"Your favorite command is **{favorite_command}** 🎈")
 
+        # Botão para armazenar dados filtrados
+        if st.button("Armazenar Dados"):
+            st.session_state['df_temp'] = df_filtered_oem
+            
     def mostrar_dataframe_2():
         column_mapping = {
             'NUMOS': 'Quant./Rota',
             'ROTA': 'Rota'
         }
-        df_filtered.rename(columns=column_mapping, inplace = True )
-        table_dinamic = st.dataframe(pd.pivot_table(df_filtered,
+        df_filtered_oem.rename(columns=column_mapping, inplace = True )
+        table_dinamic = st.dataframe(pd.pivot_table(df_filtered_oem,
                                                         values=['Quant./Rota'],
                                                         index=['STATUS'],
                                                         columns=['Rota'],
@@ -80,8 +84,8 @@ def filter_oem():
         column_mapping_2 = {
             'NUMOS':'Quant./Usuário'
         }
-        df_filtered.rename(columns=column_mapping_2, inplace = True )
-        table_dinamic = st.dataframe(pd.pivot_table(df_filtered,
+        df_filtered_oem.rename(columns=column_mapping_2, inplace = True )
+        table_dinamic = st.dataframe(pd.pivot_table(df_filtered_oem,
                                                     values=['Quant./Usuário'],
                                                     index=['EXECUTOR'],
                                                     columns=['ROTA'],  # Alteração aqui
@@ -93,8 +97,8 @@ def filter_oem():
             column_mapping_3 = {
                 'NUMOS':'Quant./Tipo O.S'
             }
-            df_filtered.rename(columns=column_mapping_3, inplace = True )
-            table_dinamic = st.dataframe(pd.pivot_table(df_filtered,
+            df_filtered_oem.rename(columns=column_mapping_3, inplace = True )
+            table_dinamic = st.dataframe(pd.pivot_table(df_filtered_oem,
                                                         values=['Quant./Tipo O.S'],
                                                         index=['TIPO'],
                                                         columns=['EXECUTOR'],  # Alteração aqui
@@ -141,41 +145,41 @@ def filter_oem():
     else:
         tipocausa_filter = st.multiselect("Tipo Causa", tipocausa_options)
     
-    df_filtered = aplicar_filtros(df, rota_filter, status_filter, tipo_filter, executor_filter, data_inicial_filter, data_final_filter, origem_filter, tipocausa_filter)
+    df_filtered_oem = aplicar_filtros(df, rota_filter, status_filter, tipo_filter, executor_filter, data_inicial_filter, data_final_filter, origem_filter, tipocausa_filter)
 
     # Crie duas colunas lado a lado
     col1, col2, col3, col4, col5 = st.columns(5)
     # Botão "Apresentar Tabela"
     if col1.button("Producão"):
-        if df_filtered.empty:
+        if df_filtered_oem.empty:
             st.warning("Nenhum resultado encontrado. Refine os filtros e tente novamente.")
         else:
-            mostrar_dataframe(df_filtered)
+            mostrar_dataframe(df_filtered_oem)
 
     # Botão "Apresentar Tabela Produção dia"
     if col3.button("St/Validação"):
-        if df_filtered.empty:
+        if df_filtered_oem.empty:
             st.warning("Nenhum resultado encontrado. Refine os filtros e tente novamente.")
         else:
             mostrar_dataframe_2()
 
     # Botão "Apresentar Tabela Produção status"
     if col4.button("Prod./Usuário"):
-        if df_filtered.empty:
+        if df_filtered_oem.empty:
             st.warning("Nenhum resultado encontrado. Refine os filtros e tente novamente.")
         else:
             mostrar_dataframe_3()
 
     # Botão "Apresentar Tabela Produção Tipo de OS"
     if col5.button("Prod./TIPO OS"):
-        if df_filtered.empty:
+        if df_filtered_oem.empty:
             st.warning("Nenhum resultado encontrado. Refine os filtros e tente novamente.")
         else:
             mostrar_dataframe_4()
 
     # Botão "Gerar Gráfico"
     if col2.button("Gerar Gráfico"):
-        if df_filtered.empty:
+        if df_filtered_oem.empty:
             st.warning("Nenhum resultado encontrado. Refine os filtros e tente novamente.")
         else:
-            gerar_grafico(df_filtered)
+            gerar_grafico(df_filtered_oem)

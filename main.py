@@ -1,18 +1,24 @@
 import streamlit as st
+# Importa os módulos necessários
 import oem
 import com_ac
 import com_mt
+from pages import maps
+
 
 st.sidebar.title('Menu')
+# Menu de seleção para operações
 pages_operation = st.sidebar.selectbox('Operações', [
     'O&M-1ªtranche-Lote1(Cruzeiro do SUl/AC)',
-    'Comissonamento-2ªtranche-Lote1&2(Cruzeiro do sUl/Sena Madureira/AC)',
-    'Comissonamento-2ªtranche-Lote3(Sorriso - MT)'
+    'Comissionamento-2ªtranche-Lote1&2(Cruzeiro do sUl/Sena Madureira/AC)',
+    'Comissionamento-2ªtranche-Lote3(Sorriso - MT)'
 ])
 
+# Condicional baseado na seleção do menu
 if pages_operation == 'O&M-1ªtranche-Lote1(Cruzeiro do SUl/AC)':
     oem.filter_oem()
-if pages_operation == 'Comissonamento-2ªtranche-Lote1&2(Cruzeiro do sUl/Sena Madureira/AC)':
+elif pages_operation == 'Comissionamento-2ªtranche-Lote1&2(Cruzeiro do sUl/Sena Madureira/AC)':
     com_ac.filter_com()
-if pages_operation == 'Comissonamento-2ªtranche-Lote3(Sorriso - MT)':
+elif pages_operation == 'Comissionamento-2ªtranche-Lote3(Sorriso - MT)':
     com_mt.filter_com_mt()
+    

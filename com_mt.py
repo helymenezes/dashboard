@@ -21,7 +21,7 @@ def filter_com_mt():
     @st.cache_data
     def aplicar_filtros(df, rota_value, status_value, tipo_value, usuario_value, data_inicial, data_final, etapa_value):
         """Aplica filtros a uma planilha."""
-        df_filtered = df[
+        df_filtered_mt = df[
             df["ROTA"].isin(rota_value) &
             df["STATUS"].isin(status_value) &
             df["TIPO"].isin(tipo_value) &
@@ -30,29 +30,33 @@ def filter_com_mt():
             (df["CONCLUSAO"] >= data_inicial) &
             (df["CONCLUSAO"] <= data_final)
         ]
-        return df_filtered
+        return df_filtered_mt
 
-    def gerar_grafico(df_filtered):
+    def gerar_grafico(df_filtered_mt):
         """Gera um gráfico com base nos dados filtrados."""
-        grafico = pd.pivot_table(df_filtered, values='IDSERVICOSCONJ', index=['ROTA'], columns=['STATUS'], aggfunc='count')
+        grafico = pd.pivot_table(df_filtered_mt, values='IDSERVICOSCONJ', index=['ROTA'], columns=['STATUS'], aggfunc='count')
         fig = px.bar(grafico, barmode='stack')
         fig.update_layout(xaxis=dict(tickmode='array', tickvals=list(grafico.index), ticktext=list(grafico.index)))
         fig.update_layout(xaxis_title='ROTA', yaxis_title='CONTAGEM', hovermode='closest')
         fig.update_layout(height=800, width=1280)
         st.plotly_chart(fig)
 
-    def mostrar_dataframe(df_filtered):
+    def mostrar_dataframe(df_filtered_mt):
         """Mostra o DataFrame em formato de tabela."""
         # Adiciona uma coluna de checkboxes ao DataFrame
-        df_filtered['Selecionar'] = [False] * len(df_filtered)
+        df_filtered_mt['Selecionar'] = [False] * len(df_filtered_mt)
 
         # Exibe o DataFrame com a coluna de checkboxes
-        st.dataframe(df_filtered[['Selecionar','IDSERVICOSCONJ','ROTA','CONCLUSAO','STATUS','USUARIO',
+        st.dataframe(df_filtered_mt[['Selecionar','IDSERVICOSCONJ','ROTA','CONCLUSAO','STATUS','USUARIO',
                                   'NOMEDOCLIENTE','OBSERVACAOINT','LATLONCONF','ENDERECO','MUNICIPIO','ETAPA','USUARIOALT']])
         
         # Acessa o valor máximo da coluna "IDSERVICOSCONJ"
-        favorite_command = df_filtered["IDSERVICOSCONJ"].max()
+        favorite_command = df_filtered_mt["IDSERVICOSCONJ"].max()
         st.markdown(f"Your favorite command is **{favorite_command}** 🎈")
+        
+        # Botão para armazenar dados filtrados
+        if st.button("Armazenar Dados"):
+            st.session_state['df_temp'] = df_filtered_mt
         
 
     df = ler_planilha()
@@ -89,19 +93,19 @@ def filter_com_mt():
     else:
         usuario_filter = st.multiselect("Usuário:", usuario_options)
 
-    df_filtered = aplicar_filtros(df, rota_filter, status_filter, tipo_filter, usuario_filter, data_inicial_filter, data_final_filter, etapa_filter)
+    df_filtered_mt = aplicar_filtros(df, rota_filter, status_filter, tipo_filter, usuario_filter, data_inicial_filter, data_final_filter, etapa_filter)
 
     # Crie duas colunas lado a lado
     col1, col2 = st.columns(2)
     # Botão "Apresentar Tabela"
     if col1.button("Apresentar Tabela"):
-        if df_filtered.empty:
+        if df_filtered_mt.empty:
             st.warning("Nenhum resultado encontrado. Refine os filtros e tente novamente.")
         else:
-            mostrar_dataframe(df_filtered)
+            mostrar_dataframe(df_filtered_mt)
     # Botão "Gerar Gráfico"
     if col2.button("Gerar Gráfico"):
-        if df_filtered.empty:
+        if df_filtered_mt.empty:
             st.warning("Nenhum resultado encontrado. Refine os filtros e tente novamente.")
         else:
-            gerar_grafico(df_filtered)
+            gerar_grafico(df_filtered_mt)
