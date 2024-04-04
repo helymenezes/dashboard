@@ -6,7 +6,7 @@ import sqlite3
 
 
 # Chave de API do Google Maps (substitua pela sua chave)
-api_key = 'AIzaSyDCL6ERb5rPN8nTVloJ5UuG0ALAlFoAUeU'
+api_key = 'digite_sua_api'
 
 # Criar o cliente do Google Maps
 client = googlemaps.Client(key=api_key)
