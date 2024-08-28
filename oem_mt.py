@@ -2,6 +2,18 @@ import pandas as pd
 import streamlit as st  
 import plotly.express as px
 
+import sys
+import os
+
+# Diretório atual (onde order.py está localizado)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Diretório pai (onde oem_mt.py está localizado)
+parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
+
+# Adiciona o diretório pai ao sys.path
+sys.path.append(parent_dir)
+
 def filter_oem_mt():
     st.title("PRODUÇÃO O&M MT")    
 
@@ -38,7 +50,7 @@ def filter_oem_mt():
         ]
         return df_filtered_oem_mt
 
-    def gerar_grafico(df_filtered_oem_mt_mt):
+    def gerar_grafico(df_filtered_oem_mt):
         """Gera um gráfico com base nos dados filtrados."""
         grafico = pd.pivot_table(df_filtered_oem_mt, values='NUMOS', index=['ROTA'], columns=['STATUS'], aggfunc='count')
         fig = px.bar(grafico, barmode='stack')
@@ -70,7 +82,7 @@ def filter_oem_mt():
             'ROTA': 'Rota'
         }
         df_filtered_oem_mt.rename(columns=column_mapping, inplace = True )
-        table_dinamic = st.dataframe(pd.pivot_table(df_filtered_oem_mt,
+        table_dinamic_mt = st.dataframe(pd.pivot_table(df_filtered_oem_mt,
                                                         values=['Quant./Rota'],
                                                         index=['STATUS'],
                                                         columns=['Rota'],
@@ -85,7 +97,7 @@ def filter_oem_mt():
             'NUMOS':'Quant./Usuário'
         }
         df_filtered_oem_mt.rename(columns=column_mapping_2, inplace = True )
-        table_dinamic = st.dataframe(pd.pivot_table(df_filtered_oem_mt,
+        table_dinamic_mt = st.dataframe(pd.pivot_table(df_filtered_oem_mt,
                                                     values=['Quant./Usuário'],
                                                     index=['EXECUTOR'],
                                                     columns=['ROTA'],  # Alteração aqui
@@ -98,7 +110,7 @@ def filter_oem_mt():
                 'NUMOS':'Quant./Tipo O.S'
             }
             df_filtered_oem_mt.rename(columns=column_mapping_3, inplace = True )
-            table_dinamic = st.dataframe(pd.pivot_table(df_filtered_oem_mt,
+            table_dinamic_mt = st.dataframe(pd.pivot_table(df_filtered_oem_mt,
                                                         values=['Quant./Tipo O.S'],
                                                         index=['TIPO'],
                                                         columns=['EXECUTOR'],  # Alteração aqui

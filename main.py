@@ -1,10 +1,10 @@
-import streamlit as st
 # Importa os módulos necessários
+import streamlit as st
 import oem
 import oem_mt
 import com_ac
 import com_mt
-from pages import maps
+
 
 
 st.sidebar.title('Menu')
