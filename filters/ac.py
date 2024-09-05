@@ -164,4 +164,6 @@ def filter_com():
             st.warning("Não há dados para armazenar.")
         else:
             armazenar_dados(df_filtered_ac)
-filter_com()
+# Chama a função principal
+if __name__ == "__main__":
+    filter_com()

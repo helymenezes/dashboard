@@ -1,7 +1,7 @@
 import streamlit as st  
 import pandas as pd
 import numpy as np
-import plotly.express as px
+#import plotly.express as px
 
 def base_oem_1t_ac():
     st.title("O&M 1ª Tranche Acre")

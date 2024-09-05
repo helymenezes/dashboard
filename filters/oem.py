@@ -183,3 +183,6 @@ def filter_oem():
             st.warning("Nenhum resultado encontrado. Refine os filtros e tente novamente.")
         else:
             gerar_grafico(df_filtered_oem)
+# Chama a função principal
+if __name__ == "__main__":
+    filter_oem()

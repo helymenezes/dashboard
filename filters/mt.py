@@ -109,3 +109,5 @@ def filter_com_mt():
             st.warning("Nenhum resultado encontrado. Refine os filtros e tente novamente.")
         else:
             gerar_grafico(df_filtered_mt)
+if __name__ == "__main__":
+    filter_com_mt()
